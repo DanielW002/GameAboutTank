@@ -9,3 +9,6 @@ script = ExtResource("1_8c2de")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.64, 0.64)
 texture = ExtResource("2_i7uyu")
+
+[node name="Canon_position" type="Node2D" parent="."]
+position = Vector2(20, 0)

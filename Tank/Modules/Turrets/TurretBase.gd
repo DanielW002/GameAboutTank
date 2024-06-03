@@ -8,9 +8,15 @@ enum State {
 
 @export var camera_view_distance : float = 0.3
 @export var rotation_speed : float = 1.0
+@export var shell_scene: PackedScene = preload("res://Tank/Shell.tscn")
+
 
 var state : State = State.ALIVE
 var angular_speed : float = 0
+
+var angle_to_target : float = 0
+var reload_timer : int = 500
+var last_shot_time : int = Time.get_ticks_msec()
 
 var target : Vector2
 var tank : TankController = null
@@ -43,23 +49,30 @@ func rotate_to_target(delta : float) -> void:
 	var forward : Vector2 = global_transform.basis_xform(Vector2.RIGHT)
 	var direction_to_target : Vector2 = target - global_position
 	var angle_to_target : float = forward.angle_to(direction_to_target)
-	
+	var main_shooting : float = Input.get_action_strength("main_weapon")
+
 	if (angle_to_target > 0):
 		angular_speed = rotation_speed
-	else:
+	elif (angle_to_target < 0):
 		angular_speed = -rotation_speed
 	
-	var delta_angle : float = angular_speed * delta
-	if (delta_angle > 0 && angle_to_target > 0):
-		delta_angle = minf(delta_angle, angle_to_target)
-	elif (delta_angle < 0 && angle_to_target < 0):
-		delta_angle = maxf(delta_angle, angle_to_target)
-	rotate(delta_angle)
+	if (main_shooting > 0 && main_weapon_ready()):
+		var shell : Shell = shell_scene.instantiate() as Shell
+		var world : Node2D = get_node("/root/TabulaRasa") as Node2D
+		assert(world != null)
+		world.add_child(shell)
+		last_shot_time = Time.get_ticks_msec()
 	
 
 func state_alive(delta : float) -> void:
 	rotate_to_target(delta)
 
+func main_weapon_ready() -> bool:
+	var curr_time = Time.get_ticks_msec()
+	if (curr_time >= last_shot_time + reload_timer):
+		return true
+	else:
+		return false
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
